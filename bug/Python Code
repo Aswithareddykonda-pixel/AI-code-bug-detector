@@ -1,0 +1,124 @@
+import ast
+import re
+
+
+class BugDetector(ast.NodeVisitor):
+
+    def __init__(self):
+        self.bugs = []
+        self.variables = {}
+        self.used_variables = set()
+
+    def add_bug(self, line, bug_type, message, suggestion):
+        self.bugs.append({
+            "line": line,
+            "type": bug_type,
+            "message": message,
+            "suggestion": suggestion
+        })
+
+    # Detect undefined variables
+    def visit_Name(self, node):
+
+        if isinstance(node.ctx, ast.Load):
+            self.used_variables.add(node.id)
+
+            if node.id not in self.variables and node.id not in {
+                "print", "len", "range", "str", "int",
+                "float", "list", "dict", "set", "True",
+                "False", "None"
+            }:
+                self.add_bug(
+                    node.lineno,
+                    "Undefined Variable",
+                    f"Variable '{node.id}' may not be defined.",
+                    f"Define '{node.id}' before using it."
+                )
+
+        elif isinstance(node.ctx, ast.Store):
+            self.variables[node.id] = node.lineno
+
+        self.generic_visit(node)
+
+    # Detect division by zero
+    def visit_BinOp(self, node):
+
+        if isinstance(node.op, (ast.Div, ast.FloorDiv, ast.Mod)):
+
+            if isinstance(node.right, ast.Constant):
+                if node.right.value == 0:
+                    self.add_bug(
+                        node.lineno,
+                        "Division By Zero",
+                        "The code attempts to divide by zero.",
+                        "Check the denominator before performing division."
+                    )
+
+        self.generic_visit(node)
+
+    # Detect empty except blocks
+    def visit_ExceptHandler(self, node):
+
+        if node.body:
+            first_statement = node.body[0]
+
+            if isinstance(first_statement, ast.Pass):
+                self.add_bug(
+                    node.lineno,
+                    "Empty Exception Handler",
+                    "Exception is caught but nothing is done.",
+                    "Handle the exception or log the error."
+                )
+
+        self.generic_visit(node)
+
+    # Detect mutable default arguments
+    def visit_FunctionDef(self, node):
+
+        for default in node.args.defaults:
+
+            if isinstance(default, (ast.List, ast.Dict, ast.Set)):
+                self.add_bug(
+                    node.lineno,
+                    "Mutable Default Argument",
+                    "Function uses a mutable object as a default argument.",
+                    "Use None as the default and create the object inside the function."
+                )
+
+        self.generic_visit(node)
+
+    # Detect suspicious eval usage
+    def visit_Call(self, node):
+
+        if isinstance(node.func, ast.Name):
+
+            if node.func.id == "eval":
+                self.add_bug(
+                    node.lineno,
+                    "Dangerous Function",
+                    "Use of eval() can execute arbitrary code.",
+                    "Avoid eval() and use safer alternatives."
+                )
+
+        self.generic_visit(node)
+
+
+def analyze_code(code):
+
+    detector = BugDetector()
+
+    try:
+        tree = ast.parse(code)
+
+        detector.visit(tree)
+
+    except SyntaxError as error:
+
+        detector.add_bug(
+            error.lineno,
+            "Syntax Error",
+            error.msg,
+            "Correct the syntax near the indicated line."
+        )
+
+    return detector.bugs

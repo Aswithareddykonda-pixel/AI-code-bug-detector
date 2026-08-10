@@ -1,0 +1,59 @@
+nstall the required library:
+
+pip install -r requirements.txt
+
+Run the application:
+
+streamlit run app.py
+
+You should get a local address similar to:
+
+http://localhost:8501
+
+Open that address in your browser.
+
+Enter:
+def calculate(a, b=[]):
+    result = a / 0
+    print(total)
+    return result
+
+Then click:
+
+🔍 Detect Bugs
+
+Expected simulation:
+🐞 AI Code Bug Detector
+
+3 potential issue(s) detected.
+
+Bug 1: Mutable Default Argument
+Line: 1
+
+Problem:
+Function uses a mutable object as a default argument.
+
+Suggested Fix:
+Use None as the default and create the object inside the function.
+
+--------------------------------
+
+Bug 2: Division By Zero
+Line: 2
+
+Problem:
+The code attempts to divide by zero.
+
+Suggested Fix:
+Check the denominator before performing division.
+
+--------------------------------
+
+Bug 3: Undefined Variable
+Line: 3
+
+Problem:
+Variable 'total' may not be defined.
+
+Suggested Fix:
+Define 'total' before using it.

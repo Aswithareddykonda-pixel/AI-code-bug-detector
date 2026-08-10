@@ -1,0 +1,13 @@
+AI Code Bug Detector is a Python-based application that automatically analyzes source code and identifies potential programming errors.
+
+The system uses static code analysis and machine-learning-style classification to detect common issues such as:
+
+Syntax errors
+Undefined variables
+Unused variables
+Division by zero
+Dangerous code patterns
+Missing exception handling
+Common Python programming mistakes
+
+It also provides an explanation and recommendation for fixing the detected issue.
